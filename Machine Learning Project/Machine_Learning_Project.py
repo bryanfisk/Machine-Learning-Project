@@ -27,7 +27,7 @@ def input_images(directory):
                 print('Reading: ' + directory)
                 print('█' * blocks, '-' * (50 - blocks), int((count + 1) / len(f) * 100), '%\t', sep = '')
             count += 1
-            image = misc.imread(directory + '\\' + file)
+            image = misc.imread(directory + '\\' + file, flatten = True)
             reduced_image = misc.imresize(image, (192, 192, 1))
             X.append(reduced_image)
             if 'virus' in file or 'bacteria' in file:
@@ -56,7 +56,7 @@ y_train = np.asarray(y_train_n + y_train_p)
 X_test = np.asarray(X_test_n + X_test_p)
 y_test = np.asarray(y_test_n + y_test_p)
 
-batch_size = 64
+batch_size = 40
 num_classes = 2
 epochs = 12
 img_rows, img_cols = 192, 192
@@ -83,6 +83,8 @@ model.add(Dense(num_classes, activation='softmax'))
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
               metrics=['accuracy'])
+
+model.summary()
 
 model.fit(X_train, y_train,
           batch_size=batch_size,
