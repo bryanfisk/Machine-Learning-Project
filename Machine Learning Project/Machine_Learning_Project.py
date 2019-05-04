@@ -14,12 +14,16 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 import numpy as np
 
-def input_images(directory):
+#read input up to x number images
+def input_images(directory, x = -1):
     X = []
     y = []
     count = 0
+    bcount = 0
     for r, d, f in os.walk(directory):
         for file in f:
+            if bcount == x:
+                break
             two_percent = len(f) / 50
             blocks = int((count + 1) / two_percent)
             if int(count % two_percent) == 0:
@@ -28,12 +32,14 @@ def input_images(directory):
                 print('█' * blocks, '-' * (50 - blocks), int((count + 1) / len(f) * 100), '%\t', sep = '')
             count += 1
             image = misc.imread(directory + '\\' + file, flatten = True)
-            reduced_image = misc.imresize(image, (192, 192, 1))
+            reduced_image = misc.imresize(image, (128, 128, 1))
+            reduced_image = [k / 255 for k in reduced_image]
             X.append(reduced_image)
             if 'virus' in file or 'bacteria' in file:
                 y.append(1)
             else:
                 y.append(0)
+            bcount += 1
     return X, y
 
 root = "D:\\Desktop\\chest_xray"
@@ -45,7 +51,7 @@ dirs = ['\\train\\NORMAL',
         '\\val\\PNEUMONIA']
 
 X_train_n, y_train_n = input_images(root + dirs[0])
-X_train_p, y_train_p = input_images(root + dirs[1])
+X_train_p, y_train_p = input_images(root + dirs[1], len(X_train_n))
 X_test_n, y_test_n = input_images(root + dirs[2])
 X_test_p, y_test_p = input_images(root + dirs[3])
 X_val_n, y_val_n = input_images(root + dirs[4])
@@ -59,7 +65,7 @@ y_test = np.asarray(y_test_n + y_test_p)
 batch_size = 40
 num_classes = 2
 epochs = 12
-img_rows, img_cols = 192, 192
+img_rows, img_cols = 128, 128
 
 X_train = X_train.reshape(X_train.shape[0], img_rows, img_cols, 1)
 X_test = X_test.reshape(X_test.shape[0], img_rows, img_cols, 1)
@@ -89,8 +95,7 @@ model.summary()
 model.fit(X_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
-          verbose=1,
-          validation_data=(X_test, y_test))
+          verbose=1)
 score = model.evaluate(X_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
